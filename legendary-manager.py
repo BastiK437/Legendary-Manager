@@ -158,9 +158,9 @@ def main():
 		elif selection == 3:
 			import_game()
 		elif selection == 4:
-			print()
+			print("To be done")
 		elif selection == 5:
-			print()
+			uninstall_game()
 
 if __name__=="__main__":
 	main()
