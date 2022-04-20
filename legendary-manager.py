@@ -132,7 +132,8 @@ def main():
 		print("[2] Update game(s)")
 		print("[3] Import game")
 		print("[4] Move game (not implemented yet)")
-		print("[5] Uninstall game")
+		print("[5] Install game (not implemented yet)")
+		print("[6] Uninstall game")
 		print("[9] Exit")
 		
 		selection = input("Enter your selection: ")
