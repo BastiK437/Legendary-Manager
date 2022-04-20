@@ -161,6 +161,8 @@ def main():
 		elif selection == 4:
 			print("To be done")
 		elif selection == 5:
+			print("To be done")
+		elif selection == 6:
 			uninstall_game()
 
 if __name__=="__main__":
