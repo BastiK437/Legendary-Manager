@@ -1,6 +1,9 @@
 from enum import Enum
 import subprocess
 from subprocess import PIPE
+from pathlib import Path
+import string
+import os
 
 installed_games_readable = []
 installed_games_ugly = []
@@ -16,10 +19,40 @@ class Commands(Enum):
 	LAUNCH		= "launch"
 	UPDATE 		= "update"
 	IMPORT 		= "import"
-	MOVE 		= "move"	# tbd
+	MOVE 		= "move"
 	INSTALL 	= "install"
 	UNINSTALL 	= "uninstall"
-	SYNC		= "sync" 	# tbd
+	SYNC		= "sync-saves"
+
+
+def change_installation_dir():
+	path_to_config = str(Path.home()) + "\.config\legendary\config.ini"
+	
+	with open(path_to_config, "r") as config_file:
+		content = config_file.readlines()
+	
+	i = 0
+	for line in content:
+		inst_dir_position = line.find("install_dir")
+		if inst_dir_position != -1:
+			dir_line = line
+			break
+		i = i + 1
+
+	inst_dir_position = inst_dir_position + len("install_dir = ")
+	current_dir = content[i][inst_dir_position:len(dir_line)]
+	print("Current dir: " + current_dir)
+	change_dir = input("Change installation dir? Y/N: ")
+	if change_dir.upper() == 'Y':
+		new_dir = input("Enter new installation dir: ")
+		if os.path.isdir(new_dir) == False:
+			print("Path not valid!")
+		else:
+			content[i] = "install_dir = " + new_dir
+			with open(path_to_config, "w") as config_file:
+				config_file.writelines(content)
+			print("Installation directory changed!")
+
 
 def legendary_cmd(command, selection_text, context):
 	print("####### " + command.value + " Game #######")
@@ -59,16 +92,15 @@ def legendary_cmd(command, selection_text, context):
 		cmd_postfix = " " + path
 
 	elif command == Commands.MOVE:
-		# TODO 
-		pass
+		path = input("New game location (" + installed_games_readable[selection-1] + "): ")
+		cmd_postfix = " " + path
+
 	elif command == Commands.INSTALL:
-		# TODO get and change installation path
-		pass
+		change_installation_dir()
 	elif command == Commands.UNINSTALL:
 		# nothing special to do here
 		pass
 	elif command == Commands.SYNC:
-		# TODO
 		pass
 
 	if not (command == Commands.UPDATE and selection == 0):
@@ -157,10 +189,10 @@ def main():
 		print("[3] Import game")
 		print("[4] Install game")
 		print("[5] Uninstall game")
-		print("[6] Move game (not implemented yet)")
-		print("[7] Sync Game (not implemented yet)")
-		print("[8] Change installation directory (not implemented yet)")
-		print("[9] Exit")
+		print("[6] Move game")
+		print("[7] Sync Game")
+		print("[8] Change installation directory")
+		print("[0] Exit")
 		
 		selection = input("Enter your selection: ")
 		if selection.isnumeric():
@@ -187,11 +219,11 @@ def main():
 		elif selection == 5:
 			legendary_cmd(Commands.UNINSTALL, "What game you wanna uninstall?: ", Context.INSTALLED_GAMES)
 		elif selection == 6:
-			print("To be done")
+			legendary_cmd(Commands.MOVE, "What game you wanna move?: ", Context.INSTALLED_GAMES)
 		elif selection == 7:
-			print("To be done")
+			legendary_cmd(Commands.SYNC, "What game you wanna sync?: ", Context.INSTALLED_GAMES)
 		elif selection == 8:
-			print("To be done")
+			change_installation_dir()
 		else:
 			print("Selection out of range")
 
