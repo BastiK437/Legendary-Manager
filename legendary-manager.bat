@@ -1,1 +1,1 @@
-python3 D:\MEGA\Legendary\Legendary-Manager\legendary-manager.py
+python3 path\to\legendary-manager.py
