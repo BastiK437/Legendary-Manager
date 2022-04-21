@@ -61,7 +61,7 @@ def legendary_cmd(command, selection_text, context):
 		# TODO 
 		pass
 	elif command == Commands.INSTALL:
-		# get and change installation path
+		# TODO get and change installation path
 		pass
 	elif command == Commands.UNINSTALL:
 		# nothing special to do here
