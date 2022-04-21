@@ -16,8 +16,10 @@ class Commands(Enum):
 	LAUNCH		= "launch"
 	UPDATE 		= "update"
 	IMPORT 		= "import"
+	MOVE 		= "move"	# tbd
 	INSTALL 	= "install"
 	UNINSTALL 	= "uninstall"
+	SYNC		= "sync" 	# tbd
 
 def legendary_cmd(command, selection_text, context):
 	print("####### " + command.value + " Game #######")
@@ -56,11 +58,17 @@ def legendary_cmd(command, selection_text, context):
 		path = input("Path to game (" + available_games_readable[selection-1] + "): ")
 		cmd_postfix = " " + path
 
+	elif command == Commands.MOVE:
+		# TODO 
+		pass
 	elif command == Commands.INSTALL:
 		# TODO get and change installation path
 		pass
 	elif command == Commands.UNINSTALL:
 		# nothing special to do here
+		pass
+	elif command == Commands.SYNC:
+		# TODO
 		pass
 
 	if not (command == Commands.UPDATE and selection == 0):
@@ -149,6 +157,9 @@ def main():
 		print("[3] Import game")
 		print("[4] Install game")
 		print("[5] Uninstall game")
+		print("[6] Move game (not implemented yet)")
+		print("[7] Sync Game (not implemented yet)")
+		print("[8] Change installation directory (not implemented yet)")
 		print("[9] Exit")
 		
 		selection = input("Enter your selection: ")
@@ -175,6 +186,12 @@ def main():
 			legendary_cmd(Commands.INSTALL, "What game you wanna install?: ", Context.AVAILABLE_GAMES)
 		elif selection == 5:
 			legendary_cmd(Commands.UNINSTALL, "What game you wanna uninstall?: ", Context.INSTALLED_GAMES)
+		elif selection == 6:
+			print("To be done")
+		elif selection == 7:
+			print("To be done")
+		elif selection == 8:
+			print("To be done")
 		else:
 			print("Selection out of range")
 
