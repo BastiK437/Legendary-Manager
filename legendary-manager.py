@@ -28,7 +28,7 @@ class Commands(Enum):
 def change_installation_dir():
 	path_to_config = str(Path.home()) + "\.config\legendary\config.ini"
 	if os.path.isfile(path_to_config) == False:
-		print("Can't find legendary config file. Should be at 'C:\Users\user\.config\legendary\config.ini'")
+		print("Can't find legendary config file. Should be at \"C:\\Users\\user\\.config\\legendary\\config.ini\"")
 		return
 	
 	with open(path_to_config, "r") as config_file:
@@ -204,7 +204,7 @@ def main():
 			print("Not a number")
 			continue
 
-		if selection == 9:
+		if selection == 0:
 			exit()
 			
 		fill_game_list(Context.AVAILABLE_GAMES)
