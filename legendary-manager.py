@@ -159,6 +159,7 @@ def main():
 		print("[5] Install game")
 		print("[6] Uninstall game")
 		print("[7] Sync Game (not implemented yet)")
+		print("[8] Change installation directory (not implemented yet)")
 		print("[9] Exit")
 		
 		selection = input("Enter your selection: ")
@@ -188,6 +189,8 @@ def main():
 		elif selection == 6:
 			legendary_cmd(Commands.UNINSTALL, "What game you wanna uninstall?: ", Context.INSTALLED_GAMES)
 		elif selection == 7:
+			print("To be done")
+		elif selection == 8:
 			print("To be done")
 		else:
 			print("Selection out of range")
