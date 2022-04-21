@@ -165,7 +165,7 @@ def main():
 
 		if selection == 9:
 			exit()
-		if selection < 1 and selection > 5:
+		if selection < 1 or selection > 6:
 			print("Selection out of range")
 			continue
 			
