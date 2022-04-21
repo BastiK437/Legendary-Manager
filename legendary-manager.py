@@ -1,3 +1,4 @@
+from enum import Enum
 import subprocess
 from subprocess import PIPE
 
@@ -6,30 +7,84 @@ installed_games_ugly = []
 available_games_readable = []
 available_games_ugly = []
 
-def uninstall_game():
-	print("####### Uninstall Game #######")
-	print_installed()
+class Context(Enum):
+	AVAILABLE_GAMES = 1
+	INSTALLED_GAMES = 2
 
-	selection = get_selection("What you wanna uninstall?: ", 1, len(installed_games_readable))
-	path = input("Path to game (" + installed_games_readable[selection-1] + "): ")
+# enum.value for the string
+class Commands(Enum):
+	LAUNCH		= "launch"
+	UPDATE 		= "update"
+	IMPORT 		= "import"
+	MOVE 		= "move"
+	INSTALL 	= "install"
+	UNINSTALL 	= "uninstall"
+
+def legendary_cmd(command, selection_text, context):
+	print("####### " + command.value + " Game #######")
+	print_games(context)
+
+	if context == Context.INSTALLED_GAMES:
+		highest_selection = len(installed_games_readable)
+	elif context == Context.AVAILABLE_GAMES:
+		highest_selection = len(available_games_readable)
+	else:
+		error("0x01")
 	
-	uninstall_str = "legendary uninstall " + installed_games_ugly[selection-1]
-	print("\n######### Uninstalling " + installed_games_readable[selection-1] + "#########")
-	subprocess.call(uninstall_str)
+	while True:
+		selection = get_selection(selection_text)
+		
+		lowest_selection = 1
+		if command == Commands.UPDATE:
+			lowest_selection = 0
 
-def import_game():
-	print("####### Import Game #######")
-	print_available()
+		if (selection < lowest_selection) or (selection > highest_selection):
+			print("Selection out of range")
+			continue
+		break
 
-	selection = get_selection("What you wanna import?: ", 1, len(available_games_readable))
-	path = input("Path to game (" + available_games_readable[selection-1] + "): ")
-	
-	import_str = "legendary import " + available_games_ugly[selection-1] + " " + path
-	print("\n######### Importing " + available_games_readable[selection-1] + "#########")
-	subprocess.call(import_str)
+	cmd_postfix = ""
 
+	if command == Commands.LAUNCH:
+		# nothing special to do here
+		pass
+	if command == Commands.UPDATE:
+		if selection == 0:
+			for i in range(len(installed_games_readable)):
+				legendary_call(context, command, cmd_postfix, i)
 
-def get_selection(input_str, lower_limit, high_limit):
+	elif command == Commands.IMPORT:
+		path = input("Path to game (" + available_games_readable[selection-1] + "): ")
+		cmd_postfix = " " + path
+
+	elif command == Commands.MOVE:
+		# TODO 
+		pass
+	elif command == Commands.INSTALL:
+		# get and change installation path
+		pass
+	elif command == Commands.UNINSTALL:
+		# nothing special to do here
+		pass
+
+	if not (command == Commands.UPDATE and selection == 0):
+		legendary_call(context, command, cmd_postfix, selection-1)
+
+def legendary_call(context, command, cmd_postfix, selection):
+	if context == Context.INSTALLED_GAMES:
+		cmd_list_ugly = installed_games_ugly
+		cmd_list_readable = installed_games_readable
+	elif context == Context.AVAILABLE_GAMES:
+		cmd_list_ugly = available_games_ugly
+		cmd_list_readable = available_games_readable
+	else:
+		error("0x01")
+
+	command_str = "legendary " + command.value + " " + cmd_list_ugly[selection] + cmd_postfix
+	print("\n######### " + command.value + " " + cmd_list_readable[selection] + "#########")
+	subprocess.call(command_str)
+
+def get_selection(input_str):
 	while True:
 		selection = input(input_str)
 		if selection.isnumeric():
@@ -37,92 +92,57 @@ def get_selection(input_str, lower_limit, high_limit):
 		else:
 			print("Not a number")
 			continue
-
-		if selection < lower_limit or selection > high_limit:
-			print("Selection out of range")
-			continue
 		return selection
 
-def print_installed():
+def print_games(context):
+	if context == Context.AVAILABLE_GAMES:
+		list = available_games_readable
+	elif context == Context.INSTALLED_GAMES:
+		list = installed_games_readable
+	else:
+		error("0x01")
+
 	i = 1
-	for game in installed_games_readable:
+	for game in list:
 		print("[" + str(i) + "] " + game)
 		i = i + 1
 
-def print_available():
-	i = 1
-	for game in available_games_readable:
-		print("[" + str(i) + "] " + game)
-		i = i + 1
-
-def launch_game():
-	print("####### Launch Game #######")
-	print_installed()
-
-	selection = get_selection("What you wanna play?: ", 1, len(installed_games_ugly))
-	
-	launch_str = "legendary launch " + installed_games_ugly[selection-1]
-	print("\n######### Launching " + installed_games_readable[selection-1] + "#########")
-	subprocess.call(launch_str)
-
-def update_games():
-	print("####### Update Game(s) #######")
-	print_installed()
-
-	selection = get_selection("What you wanna update? (0 for everything): ", 0, len(installed_games_ugly))
-
-	if selection == 0:
-		for game in installed_games_ugly:
-			update_str = "legendary update CrabTest"
-			print(update_str)
-			subprocess.call(update_str)
+def fill_game_list(context):
+	if context == Context.AVAILABLE_GAMES:
+		output_raw = (subprocess.run("legendary list-games", capture_output=True)).stdout
+		available_games_readable.clear()
+		available_games_ugly.clear()
+	elif context == Context.INSTALLED_GAMES:
+		output_raw = (subprocess.run("legendary list-installed", capture_output=True)).stdout
+		installed_games_readable.clear()
+		installed_games_ugly.clear()
 	else:
-		update_str = "legendary update " + installed_games_ugly[selection-1]
-		print("\n####### UPDATE " + installed_games_readable[selection-1] + " #######")
-		subprocess.call(update_str)
+		error("0x01")
 
-	
-
-
-def fill_installed_games():
-	if installed_games_ugly and installed_games_readable:
-		return
-	else:
-		installed_raw = (subprocess.run("legendary list-installed", capture_output=True)).stdout
-		installed_raw = installed_raw.decode('utf-8', 'backslashreplace')
-		string_to_search = "App name: "
-		position_ugly = 0
-		while True:
-			position_readable = installed_raw.find('*', position_ugly) + 2
-			position_ugly = installed_raw.find(string_to_search, position_ugly)
-			if position_ugly == -1:
-				return
-			position_ugly = position_ugly  + len(string_to_search)
-			game_readable = installed_raw[position_readable:installed_raw.find("(",position_readable)-1]
-			game_ugly = installed_raw[position_ugly:installed_raw.find(" ",position_ugly)]
-			
-			installed_games_readable.append(game_readable)
-			installed_games_ugly.append(game_ugly)
-
-def fill_available_games():
-	if available_games_ugly and available_games_readable:
-		return
-	else:
-		available_raw = (subprocess.run("legendary list-games", capture_output=True)).stdout
-		available_raw = available_raw.decode('utf-8', 'backslashreplace')
-		string_to_search = "App name: "
-		position_ugly = 0
-		while True:
-			position_readable = available_raw.find('*', position_ugly) + 2
-			position_ugly = available_raw.find(string_to_search, position_ugly)
-			if position_ugly == -1:
-				return
-			position_ugly = position_ugly  + len(string_to_search)
-			game_readable = available_raw[position_readable:available_raw.find("(",position_readable)-1]
-			game_ugly = available_raw[position_ugly:available_raw.find(" ",position_ugly)]
-			
+	output_raw = output_raw.decode('utf-8', 'backslashreplace')
+	string_to_search = "App name: "
+	position_ugly = 0
+	while True:
+		position_readable = output_raw.find('*', position_ugly) + 2
+		position_ugly = output_raw.find(string_to_search, position_ugly)
+		if position_ugly == -1:
+			return
+		position_ugly = position_ugly  + len(string_to_search)
+		game_readable = output_raw[position_readable:output_raw.find("(",position_readable)-1]
+		game_ugly = output_raw[position_ugly:output_raw.find(" ",position_ugly)]
+		
+		if context == Context.AVAILABLE_GAMES:
 			available_games_readable.append(game_readable)
 			available_games_ugly.append(game_ugly)
+		elif context == Context.INSTALLED_GAMES:
+			installed_games_readable.append(game_readable)
+			installed_games_ugly.append(game_ugly)
+		else:
+			error("0x01")
+
+def error(error):
+	print("ERROR " + error)
+	exit()
 
 
 def main():
@@ -132,7 +152,7 @@ def main():
 		print("[2] Update game(s)")
 		print("[3] Import game")
 		print("[4] Move game (not implemented yet)")
-		print("[5] Install game (not implemented yet)")
+		print("[5] Install game")
 		print("[6] Uninstall game")
 		print("[9] Exit")
 		
@@ -149,21 +169,22 @@ def main():
 			print("Selection out of range")
 			continue
 			
-		fill_installed_games()
-		fill_available_games()
+		fill_game_list(Context.AVAILABLE_GAMES)
+		fill_game_list(Context.INSTALLED_GAMES)
+
 		print()
 		if selection == 1:
-			launch_game()
+			legendary_cmd(Commands.LAUNCH, "What you wanna play?: ", Context.INSTALLED_GAMES)
 		elif selection == 2:
-			update_games()
+			legendary_cmd(Commands.UPDATE, "What you wanna update? (0 for everything): ", Context.INSTALLED_GAMES)
 		elif selection == 3:
-			import_game()
+			legendary_cmd(Commands.IMPORT, "What you wanna import?: ", Context.AVAILABLE_GAMES)
 		elif selection == 4:
 			print("To be done")
 		elif selection == 5:
-			print("To be done")
+			legendary_cmd(Commands.INSTALL, "What game you wanna install?: ", Context.AVAILABLE_GAMES)
 		elif selection == 6:
-			uninstall_game()
+			legendary_cmd(Commands.UNINSTALL, "What game you wanna uninstall?: ", Context.INSTALLED_GAMES)
 
 if __name__=="__main__":
 	main()
