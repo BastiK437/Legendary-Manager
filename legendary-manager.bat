@@ -1,1 +1,0 @@
-python3 D:\MEGA\Legendary\Legendary-Manager\legendary-manager.py
