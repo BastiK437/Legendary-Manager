@@ -62,9 +62,9 @@ def legendary_cmd(command, selection_text, context):
 	print_games(context)
 
 	if context == Context.INSTALLED_GAMES:
-		highest_selection = len(installed_games_readable)
+		highest_selection = len(installed_games_readable) + 1
 	elif context == Context.AVAILABLE_GAMES:
-		highest_selection = len(available_games_readable)
+		highest_selection = len(available_games_readable) + 1
 	else:
 		error("0x01")
 	
@@ -79,6 +79,9 @@ def legendary_cmd(command, selection_text, context):
 			print("Selection out of range")
 			continue
 		break
+
+	if selection == highest_selection:
+		return
 
 	cmd_postfix = ""
 
@@ -127,9 +130,9 @@ def get_selection(input_str):
 	while True:
 		selection = input(input_str)
 		if selection.isnumeric():
-				selection = int(selection)
+			selection = int(selection)
 		else:
-			print("Not a number")
+			print("Not a number or an alpha")
 			continue
 		return selection
 
@@ -145,6 +148,8 @@ def print_games(context):
 	for game in list:
 		print("[" + str(i) + "] " + game)
 		i = i + 1
+
+	print("[" + str(i) + "] " + "Abort")
 
 def fill_game_list(context):
 	if context == Context.AVAILABLE_GAMES:
