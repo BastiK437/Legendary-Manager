@@ -10,6 +10,9 @@ installed_games_ugly = []
 available_games_readable = []
 available_games_ugly = []
 
+legendary_call_str = "legendary"
+# legendary_call_str = "C:\\Users\\Basti\\Desktop\\legendary\\legendary"
+
 class Context(Enum):
 	AVAILABLE_GAMES = 1
 	INSTALLED_GAMES = 2
@@ -122,7 +125,7 @@ def legendary_call(context, command, cmd_postfix, selection):
 	else:
 		error("0x01")
 
-	command_str = "legendary " + command.value + " " + cmd_list_ugly[selection] + cmd_postfix
+	command_str = legendary_call_str + " " + command.value + " " + cmd_list_ugly[selection] + cmd_postfix
 	print("\n######### " + command.value + " " + cmd_list_readable[selection] + "#########")
 	subprocess.call(command_str)
 
