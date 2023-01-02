@@ -9,6 +9,8 @@ installed_games_readable = []
 installed_games_ugly = []
 available_games_readable = []
 available_games_ugly = []
+importable_games_readable = []
+importable_games_ugly = []
 
 legendary_call_str = "legendary"
 # legendary_call_str = "C:\\Users\\Basti\\Desktop\\legendary\\legendary"
@@ -16,6 +18,7 @@ legendary_call_str = "legendary"
 class Context(Enum):
 	AVAILABLE_GAMES = 1
 	INSTALLED_GAMES = 2
+	IMPORTABLE_GAMES = 3
 
 # enum.value for the string
 class Commands(Enum):
@@ -68,14 +71,18 @@ def legendary_cmd(command, selection_text, context):
 		highest_selection = len(installed_games_readable) + 1
 	elif context == Context.AVAILABLE_GAMES:
 		highest_selection = len(available_games_readable) + 1
+	elif context == Context.IMPORTABLE_GAMES:
+		highest_selection = len(importable_games_readable) + 1
 	else:
-		error("0x01")
+		error("[legendary_cmd] 0x01")
 	
 	while True:
 		selection = get_selection(selection_text)
 		
 		lowest_selection = 1
 		if command == Commands.UPDATE:
+			lowest_selection = 0
+		elif command == Commands.IMPORT:
 			lowest_selection = 0
 
 		if (selection < lowest_selection) or (selection > highest_selection):
@@ -88,6 +95,8 @@ def legendary_cmd(command, selection_text, context):
 
 	cmd_postfix = ""
 
+	legendary_call_needed = True
+
 	if command == Commands.LAUNCH:
 		# nothing special to do here
 		pass
@@ -95,10 +104,30 @@ def legendary_cmd(command, selection_text, context):
 		if selection == 0:
 			for i in range(len(installed_games_readable)):
 				legendary_call(context, command, cmd_postfix, i)
+			
+			legendary_call_needed = False
 
 	elif command == Commands.IMPORT:
-		path = input("Path to game (" + available_games_readable[selection-1] + "): ")
-		cmd_postfix = " " + path
+		if selection == 0:
+			path = input("Path to gamefolder: ")
+			sub_dirs = []
+			for element in os.listdir(path):
+				d = os.path.join(path, element)
+				if os.path.isdir(d):
+					sub_dirs.append(d)
+			
+			for sub_dir in sub_dirs:
+				read = input("Do you want to import this game? (Y/N): " + sub_dir + " :")
+				if read.upper() == 'Y':
+					print_games(context)
+					selection = get_selection("Select the related game to the folder: ")
+					cmd_postfix = " " + path
+					legendary_call(context, command, cmd_postfix, selection-1)
+
+			legendary_call_needed = False
+		else:
+			path = input("Path to game (" + available_games_readable[selection-1] + "): ")
+			cmd_postfix = " " + path
 
 	elif command == Commands.MOVE:
 		path = input("New game location (" + installed_games_readable[selection-1] + "): ")
@@ -112,7 +141,7 @@ def legendary_cmd(command, selection_text, context):
 	elif command == Commands.SYNC:
 		pass
 
-	if not (command == Commands.UPDATE and selection == 0):
+	if legendary_call_needed == True:
 		legendary_call(context, command, cmd_postfix, selection-1)
 
 def legendary_call(context, command, cmd_postfix, selection):
@@ -122,12 +151,17 @@ def legendary_call(context, command, cmd_postfix, selection):
 	elif context == Context.AVAILABLE_GAMES:
 		cmd_list_ugly = available_games_ugly
 		cmd_list_readable = available_games_readable
+	elif context == Context.IMPORTABLE_GAMES:
+		cmd_list_ugly = importable_games_ugly
+		cmd_list_readable = importable_games_readable
 	else:
-		error("0x01")
+		error("[legendary_call] 0x01")
 
 	command_str = legendary_call_str + " " + command.value + " " + cmd_list_ugly[selection] + cmd_postfix
-	print("\n######### " + command.value + " " + cmd_list_readable[selection] + "#########")
-	subprocess.call(command_str)
+	print("\n######### " + command.value + " " + cmd_list_readable[selection] + " #########")
+	result = subprocess.run(command_str, stdout=subprocess.PIPE, universal_newlines=True)
+
+	print(result.stdout)
 
 def get_selection(input_str):
 	while True:
@@ -135,7 +169,7 @@ def get_selection(input_str):
 		if selection.isnumeric():
 			selection = int(selection)
 		else:
-			print("Not a number or an alpha")
+			print("Not a number")
 			continue
 		return selection
 
@@ -144,8 +178,10 @@ def print_games(context):
 		list = available_games_readable
 	elif context == Context.INSTALLED_GAMES:
 		list = installed_games_readable
+	elif context == Context.IMPORTABLE_GAMES:
+		list = importable_games_readable
 	else:
-		error("0x01")
+		error("[print_games] 0x01")
 
 	i = 1
 	for game in list:
@@ -163,8 +199,18 @@ def fill_game_list(context):
 		output_raw = (subprocess.run("legendary list-installed", capture_output=True)).stdout
 		installed_games_readable.clear()
 		installed_games_ugly.clear()
+	elif context == Context.IMPORTABLE_GAMES:
+		for game in available_games_ugly:
+			if not game in installed_games_ugly:
+				importable_games_ugly.append(game)
+
+		for game in available_games_readable:
+			if not game in installed_games_readable:
+				importable_games_readable.append(game)
+		return
+
 	else:
-		error("0x01")
+		error("[fill_game_list] 0x01")
 
 	output_raw = output_raw.decode('utf-8', 'backslashreplace')
 	string_to_search = "App name: "
@@ -185,7 +231,7 @@ def fill_game_list(context):
 			installed_games_readable.append(game_readable)
 			installed_games_ugly.append(game_ugly)
 		else:
-			error("0x01")
+			error("[fill_game_list] 0x02")
 
 def error(error):
 	print("ERROR " + error)
@@ -197,7 +243,7 @@ def main():
 		print("\n\n\n\n####### Legendary Manager #######")
 		print("[1] Launch game")
 		print("[2] Update game(s)")
-		print("[3] Import game")
+		print("[3] Import game(s)")
 		print("[4] Install game")
 		print("[5] Uninstall game")
 		print("[6] Move game")
@@ -217,6 +263,7 @@ def main():
 			
 		fill_game_list(Context.AVAILABLE_GAMES)
 		fill_game_list(Context.INSTALLED_GAMES)
+		fill_game_list(Context.IMPORTABLE_GAMES)
 
 		print()
 		if selection == 1:
@@ -224,7 +271,7 @@ def main():
 		elif selection == 2:
 			legendary_cmd(Commands.UPDATE, "What you wanna update? (0 for everything): ", Context.INSTALLED_GAMES)
 		elif selection == 3:
-			legendary_cmd(Commands.IMPORT, "What you wanna import?: ", Context.AVAILABLE_GAMES)
+			legendary_cmd(Commands.IMPORT, "What you wanna import? (0 for multiple): ", Context.IMPORTABLE_GAMES)
 		elif selection == 4:
 			legendary_cmd(Commands.INSTALL, "What game you wanna install?: ", Context.AVAILABLE_GAMES)
 		elif selection == 5:
