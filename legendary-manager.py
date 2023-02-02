@@ -29,6 +29,7 @@ class Commands(Enum):
 	INSTALL 	= "install"
 	UNINSTALL 	= "uninstall"
 	SYNC		= "sync-saves"
+	VERIFY		= "verify"
 
 
 def change_installation_dir():
@@ -84,6 +85,9 @@ def legendary_cmd(command, selection_text, context):
 			lowest_selection = 0
 		elif command == Commands.IMPORT:
 			lowest_selection = 0
+		elif command == Commands.VERIFY:
+			lowest_selection = 0
+
 
 		if (selection < lowest_selection) or (selection > highest_selection):
 			print("Selection out of range")
@@ -140,6 +144,12 @@ def legendary_cmd(command, selection_text, context):
 		pass
 	elif command == Commands.SYNC:
 		pass
+	elif command == Commands.UPDATE:
+		if selection == 0:
+			for i in range(len(installed_games_readable)):
+				legendary_call(context, command, cmd_postfix, i)
+			
+			legendary_call_needed = False
 
 	if legendary_call_needed == True:
 		legendary_call(context, command, cmd_postfix, selection-1)
@@ -249,6 +259,7 @@ def main():
 		print("[6] Move game")
 		print("[7] Sync Game")
 		print("[8] Change installation directory")
+		print("[9] Verify game(s)")
 		print("[0] Exit")
 		
 		selection = input("Enter your selection: ")
@@ -282,6 +293,8 @@ def main():
 			legendary_cmd(Commands.SYNC, "What game you wanna sync?: ", Context.INSTALLED_GAMES)
 		elif selection == 8:
 			change_installation_dir()
+		elif selection == 9:
+			legendary_cmd(Commands.VERIFY, "What you wanna verify? (0 for everything): ", Context.INSTALLED_GAMES)
 		else:
 			print("Selection out of range")
 
