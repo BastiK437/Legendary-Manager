@@ -144,7 +144,8 @@ def legendary_cmd(command, selection_text, context):
 		pass
 	elif command == Commands.SYNC:
 		pass
-	elif command == Commands.UPDATE:
+	elif command == Commands.VERIFY:
+		print("Verifying output is buggy, just be patient, it takes a while")
 		if selection == 0:
 			for i in range(len(installed_games_readable)):
 				legendary_call(context, command, cmd_postfix, i)
